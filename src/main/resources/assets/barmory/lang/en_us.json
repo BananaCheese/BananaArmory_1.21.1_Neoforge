@@ -1,0 +1,25 @@
+{
+  "creativetab.barmory": "Banana's Armory",
+
+  "block.barmory.gear_forge": "Gear Forge",
+
+  "item.barmory.gear_forge_hammer": "Gear Forge Hammer",
+
+  "item.barmory.helmet_frame": "Helmet Frame",
+  "item.barmory.chestplate_frame": "Chestplate Frame",
+  "item.barmory.leggings_frame": "Leggings Frame",
+  "item.barmory.boots_frame": "Boots Frame",
+
+  "item.barmory.iron_pauldrons": "Iron Pauldrons",
+  "item.barmory.iron_fauld": "Iron Fauld",
+  "item.barmory.iron_gorget": "Iron Gorget",
+  "item.barmory.iron_reinforcement": "Iron Reinforcement",
+
+  "barmory.configuration.title": "Banana's Armory Configs",
+  "barmory.configuration.section.barmory.common.toml": "Banana's Armory Configs",
+  "barmory.configuration.section.barmory.common.toml.title": "Banana's Armory Configs",
+  "barmory.configuration.items": "Item List",
+  "barmory.configuration.logDirtBlock": "Log Dirt Block",
+  "barmory.configuration.magicNumberIntroduction": "Magic Number Text",
+  "barmory.configuration.magicNumber": "Magic Number"
+}

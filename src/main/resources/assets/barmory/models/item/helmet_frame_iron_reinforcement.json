@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "barmory:item/armor/generated/helmet_frame_iron_reinforcement"
+  }
+}

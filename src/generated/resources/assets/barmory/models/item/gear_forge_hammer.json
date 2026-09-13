@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "barmory:item/gear_forge_hammer"
+  }
+}
