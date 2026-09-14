@@ -1,0 +1,98 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "barmory:item/armor/frames/chestplate_frame"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 871
+      },
+      "model": "barmory:item/chestplate_frame_iron_gorget_iron_pauldrons_iron_reinforcement"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 1464
+      },
+      "model": "barmory:item/chestplate_frame_iron_fauld_iron_gorget_iron_pauldrons"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 2176
+      },
+      "model": "barmory:item/chestplate_frame_iron_fauld_iron_gorget_iron_pauldrons_iron_reinforcement"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 2286
+      },
+      "model": "barmory:item/chestplate_frame_iron_fauld_iron_gorget_iron_reinforcement"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 2624
+      },
+      "model": "barmory:item/chestplate_frame_iron_gorget_iron_pauldrons"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 3409
+      },
+      "model": "barmory:item/chestplate_frame_iron_reinforcement"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 4642
+      },
+      "model": "barmory:item/chestplate_frame_iron_fauld_iron_reinforcement"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 5927
+      },
+      "model": "barmory:item/chestplate_frame_iron_fauld_iron_gorget"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 6584
+      },
+      "model": "barmory:item/chestplate_frame_iron_fauld_iron_pauldrons_iron_reinforcement"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 7946
+      },
+      "model": "barmory:item/chestplate_frame_iron_gorget"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 8204
+      },
+      "model": "barmory:item/chestplate_frame_iron_pauldrons_iron_reinforcement"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 8251
+      },
+      "model": "barmory:item/chestplate_frame_iron_fauld"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 8647
+      },
+      "model": "barmory:item/chestplate_frame_iron_fauld_iron_pauldrons"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 8690
+      },
+      "model": "barmory:item/chestplate_frame_iron_pauldrons"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 8766
+      },
+      "model": "barmory:item/chestplate_frame_iron_gorget_iron_reinforcement"
+    }
+  ]
+}

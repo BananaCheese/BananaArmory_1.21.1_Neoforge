@@ -1,5 +1,6 @@
 package net.bananacheese.bananasarmory.item.custom;
 
+import net.bananacheese.bananasarmory.BananasArmory;
 import net.bananacheese.bananasarmory.client.model.ArmorComponentsProperty;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
@@ -45,9 +46,9 @@ public class ArmorFrameAttributeModifiers {
         EquipmentSlotGroup modifierSlot = EquipmentSlotGroup.bySlot(slot);
 
         ResourceLocation armorId = ResourceLocation.fromNamespaceAndPath(
-                "gearforge", "armor_frame_defense_" + slot.getName());
+                BananasArmory.MODID, "armor_frame_defense_" + slot.getName());
         ResourceLocation toughnessId = ResourceLocation.fromNamespaceAndPath(
-                "gearforge", "armor_frame_toughness_" + slot.getName());
+                BananasArmory.MODID, "armor_frame_toughness_" + slot.getName());
 
         modifiers.add(new ItemAttributeModifiers.Entry(
                 Attributes.ARMOR,
@@ -68,8 +69,6 @@ public class ArmorFrameAttributeModifiers {
         // simple `record CustomModelData(int value)` wrapper, not the
         // multi-field record I guessed at earlier. Plain int, wrapped:
         stack.set(DataComponents.CUSTOM_MODEL_DATA,
-                new CustomModelData((int) ArmorComponentsProperty.calculatePredicateValue(stack)));
-
-
+                new CustomModelData(ArmorComponentsProperty.calculatePredicateValue(stack)));
     }
 }

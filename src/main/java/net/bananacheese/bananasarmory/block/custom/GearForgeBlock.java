@@ -3,6 +3,7 @@ package net.bananacheese.bananasarmory.block.custom;
 import com.mojang.serialization.MapCodec;
 import net.bananacheese.bananasarmory.block.entity.BABlockEntities;
 import net.bananacheese.bananasarmory.block.entity.custom.GearForgeBlockEntity;
+import net.bananacheese.bananasarmory.item.custom.GearForgeHammer;
 import net.bananacheese.bananasarmory.screen.GearForgeMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -11,6 +12,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -101,6 +103,15 @@ public class GearForgeBlock extends BaseEntityBlock {
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
                                                Player player, BlockHitResult hit) {
+        // Vanilla calls useWithoutItem() BEFORE the held item's useOn(), so
+        // without this check the Hammer's formation logic in
+        // GearForgeHammer#useOn would never run at all — this block would
+        // always eat the click first. Yield to the Hammer so it gets a turn.
+        ItemStack heldItem = player.getItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND);
+        if (heldItem.getItem() instanceof GearForgeHammer) {
+            return InteractionResult.PASS;
+        }
+
         if (!level.isClientSide) {
             BlockEntity blockEntity = level.getBlockEntity(pos);
             if (blockEntity instanceof GearForgeBlockEntity forgeEntity) {

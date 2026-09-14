@@ -1,0 +1,14 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "barmory:item/armor/frames/helmet_frame"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 3409
+      },
+      "model": "barmory:item/helmet_frame_iron_reinforcement"
+    }
+  ]
+}

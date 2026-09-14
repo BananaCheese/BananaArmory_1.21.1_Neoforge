@@ -206,52 +206,51 @@ public class ArmorModelJsonGenerator {
         }
 
         // Sort by threshold
-        entries.sort(Comparator.comparingDouble(e -> e.threshold));
+        entries.sort(Comparator.comparingInt(e -> e.threshold));
 
-        // Create main model JSON
+        // Old-style (pre item-model-definitions) override system: a single
+        // models/item/<frame>_frame.json with a base texture + "overrides"
+        // list matched by an int-valued "custom_model_data" predicate.
+        // (Earlier this wrote a "minecraft:range_dispatch" file into
+        // items/<frame>_frame.json — that format/location is only read on
+        // MC versions newer than 1.21.1, so those files were silently
+        // ignored by the game and every armor frame showed a missing
+        // texture in the inventory. This format is what 1.21.1 actually
+        // reads.)
         JsonObject model = new JsonObject();
-        JsonObject modelContent = new JsonObject();
-        modelContent.addProperty("type", "minecraft:range_dispatch");
-        modelContent.addProperty("property", "barmory:components");
-        modelContent.addProperty("scale", 1.0);
+        model.addProperty("parent", "minecraft:item/generated");
 
-        // Add entries
-        JsonArray entriesArray = new JsonArray();
+        JsonObject textures = new JsonObject();
+        textures.addProperty("layer0", "barmory:item/armor/frames/" + frameType + "_frame");
+        model.add("textures", textures);
+
+        JsonArray overrides = new JsonArray();
         for (CombinationEntry entry : entries) {
-            JsonObject entryObj = new JsonObject();
-            entryObj.addProperty("threshold", entry.threshold);
-
-            JsonObject entryModel = new JsonObject();
-            entryModel.addProperty("type", "minecraft:model");
-
             // Build model name (sorted alphabetically like texture generator does)
             List<String> names = entry.components.stream().map(c -> c.name).sorted().toList();
             String modelName = frameType + "_frame_" + String.join("_", names);
-            entryModel.addProperty("model", "barmory:item/" + modelName);
 
-            entryObj.add("model", entryModel);
-            entriesArray.add(entryObj);
+            JsonObject predicate = new JsonObject();
+            predicate.addProperty("custom_model_data", entry.threshold);
+
+            JsonObject overrideObj = new JsonObject();
+            overrideObj.add("predicate", predicate);
+            overrideObj.addProperty("model", "barmory:item/" + modelName);
+            overrides.add(overrideObj);
 
             // Generate variant model
             generateVariantModel(frameType, modelName);
         }
+        model.add("overrides", overrides);
 
-        modelContent.add("entries", entriesArray);
-
-        // Fallback
-        JsonObject fallback = new JsonObject();
-        fallback.addProperty("type", "minecraft:model");
-        fallback.addProperty("model", "barmory:item/" + frameType + "_frame_base");
-        modelContent.add("fallback", fallback);
-
-        model.add("model", modelContent);
-
-        // Generate base model
+        // Generate base model (still used as the layer0 texture fallback
+        // above, and kept as its own file for anything that references it
+        // directly, e.g. tooltips/previews)
         generateBaseModel(frameType);
 
-        // Write main model to items/ folder
+        // Write main model to models/item/ (NOT items/ — see note above)
         String filename = frameType + "_frame.json";
-        try (FileWriter writer = new FileWriter(ITEMS_PATH + filename)) {
+        try (FileWriter writer = new FileWriter(MODELS_PATH + filename)) {
             GSON.toJson(model, writer);
         }
 
@@ -314,17 +313,21 @@ public class ArmorModelJsonGenerator {
     }
 
     /**
-     * Calculate predicate value (matches ArmorComponentsProperty)
+     * Calculates a unique value based on attached components. Matches
+     * ArmorComponentsProperty.calculatePredicateValue exactly (int, not the
+     * old 0.0–1.0 float) — these two MUST stay in sync, since one writes
+     * the override predicates into the model JSON and the other sets the
+     * matching value on the item stack at runtime.
      */
-    private static float calculatePredicateValue(List<Component> components) {
+    private static int calculatePredicateValue(List<Component> components) {
         // Sort component names
         List<String> names = components.stream().map(c -> c.name).sorted().toList();
 
         String combined = String.join("|", names);
         int hash = combined.hashCode();
-        float value = (Math.abs(hash) % 10000) / 10000f;
+        int value = Math.abs(hash) % 9999;
 
-        return Math.max(value, 0.0001f);
+        return Math.max(value, 1);
     }
 
     private static class Component {
@@ -339,9 +342,9 @@ public class ArmorModelJsonGenerator {
 
     private static class CombinationEntry {
         final List<Component> components;
-        final float threshold;
+        final int threshold;
 
-        CombinationEntry(List<Component> components, float threshold) {
+        CombinationEntry(List<Component> components, int threshold) {
             this.components = components;
             this.threshold = threshold;
         }

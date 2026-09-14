@@ -26,7 +26,7 @@ import net.neoforged.api.distmarker.OnlyIn;
 @OnlyIn(Dist.CLIENT)
 public class GearForgeScreen extends AbstractContainerScreen<GearForgeMenu> {
     private static final ResourceLocation TEXTURE =
-            ResourceLocation.fromNamespaceAndPath("gearforge", "textures/gui/gear_forge.png");
+            ResourceLocation.fromNamespaceAndPath("barmory", "textures/gui/gear_forge.png");
 
     public GearForgeScreen(GearForgeMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
