@@ -35,21 +35,6 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * Ported from GearForgeBlock. Renames: BlockWithEntity -> BaseEntityBlock,
- * onUse -> useWithoutItem, ActionResult -> InteractionResult,
- * PlayerEntity -> Player, ItemPlacementContext -> BlockPlaceContext,
- * ServerWorld -> ServerLevel, getPlacementState -> getStateForPlacement,
- * StateManager.Builder -> StateDefinition.Builder,
- * appendProperties -> createBlockStateDefinition,
- * BlockMirror/BlockRotation -> Mirror/Rotation,
- * BlockRenderType -> RenderShape, BlockView -> BlockGetter,
- * getOutlineShape -> getShape (getCollisionShape keeps its name).
- *
- * codec(): the original returned null from getCodec() (fine under Fabric
- * Loom in dev), but NeoForge/vanilla expects a real MapCodec here — using
- * simpleCodec(GearForgeBlock::new) instead.
- */
 public class GearForgeBlock extends BaseEntityBlock {
     public static final MapCodec<GearForgeBlock> CODEC = simpleCodec(GearForgeBlock::new);
 

@@ -6,10 +6,6 @@ import net.minecraft.world.Container;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
-/**
- * Ported from GearForgeSlot. Renames: Inventory -> Container,
- * canInsert -> mayPlace, getMaxItemCount -> getMaxStackSize.
- */
 public class GearForgeSlot extends Slot {
     private final SlotType slotType;
     private final Container container;

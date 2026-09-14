@@ -13,11 +13,6 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
-/**
- * Ported from GearForgeHammer. Renames: useOnBlock -> useOn,
- * ItemUsageContext -> UseOnContext, ActionResult -> InteractionResult,
- * World -> Level, PlayerEntity -> Player, sendMessage -> displayClientMessage.
- */
 public class GearForgeHammer extends Item {
 
     public GearForgeHammer(Properties properties) {

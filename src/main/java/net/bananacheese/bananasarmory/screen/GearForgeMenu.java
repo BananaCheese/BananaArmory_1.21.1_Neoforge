@@ -23,18 +23,6 @@ import net.minecraft.world.item.component.CustomData;
 
 import java.util.List;
 
-/**
- * Ported from GearForgeScreenHandler. Renames: ScreenHandler ->
- * AbstractContainerMenu, PlayerInventory -> Inventory,
- * SimpleInventory -> SimpleContainer, onSlotClick -> clicked,
- * SlotActionType -> ClickType, checkSize -> unchanged name (still checkSize
- * in mojmap? -> actually mojmap keeps `checkContainerSize`), quickMove ->
- * unchanged, PlayerEntity -> Player, canUse -> stillValid,
- * onClosed -> removed, hasStack -> hasItem, getStack -> getItem,
- * insertItem -> moveItemStackTo, markDirty -> setChanged,
- * offerOrDrop -> placeItemBackInInventory, Text -> Component,
- * Identifier -> ResourceLocation, Registries.ITEM -> BuiltInRegistries.ITEM.
- */
 public class GearForgeMenu extends AbstractContainerMenu {
     private final Container container;
 

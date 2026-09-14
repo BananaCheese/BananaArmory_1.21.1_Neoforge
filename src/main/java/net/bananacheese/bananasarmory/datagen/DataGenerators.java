@@ -21,8 +21,5 @@ public class DataGenerators {
         CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
 
         generator.addProvider(event.includeClient(), new BAItemModelProvider(packOutput, existingFileHelper));
-
-        //generator.addProvider(event.includeClient(), new ArmorModelJsonGenerator());
-        //generator.addProvider(event.includeClient(), new ArmorTextureGenerator());
     }
 }

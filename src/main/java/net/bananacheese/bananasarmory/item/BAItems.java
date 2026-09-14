@@ -1,25 +1,13 @@
 package net.bananacheese.bananasarmory.item;
 
 import net.bananacheese.bananasarmory.BananasArmory;
-import net.bananacheese.bananasarmory.block.custom.GearForgeBlock;
 import net.bananacheese.bananasarmory.item.custom.ArmorComponentItem;
 import net.bananacheese.bananasarmory.item.custom.ArmorFrameItem;
 import net.bananacheese.bananasarmory.item.custom.GearForgeHammer;
 import net.minecraft.world.item.ArmorMaterials;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
-/**
- * Registry skeleton for the gearforge-owned items from the original DAItems:
- * GEAR_FORGE_HAMMER, the four ArmorFrameItems, and the four ArmorComponentItems.
- *
- * These are still plain Item placeholders. Next step: port GearForgeHammer,
- * ArmorFrameItem (+ ArmorFrameType enum) and ArmorComponentItem (+ ComponentType
- * enum + group logic) into net.bananacheese.gearforge.item, then swap the
- * `new Item(props)` calls below for `new GearForgeHammer(props)` etc.
- */
 public final class BAItems {
     public static final DeferredRegister.Items ITEMS =
             DeferredRegister.createItems(BananasArmory.MODID);

@@ -12,14 +12,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.util.RandomSource;
 
-/**
- * Direct port of MultiblockDummyBlock. This one's a clean rename job — no
- * structural changes needed versus the original Fabric/Yarn version.
- *
- * Renames: onUse -> useWithoutItem, ActionResult -> InteractionResult,
- * World -> Level, ServerWorld -> ServerLevel, BlockRenderType -> RenderShape,
- * BlockView -> BlockGetter, onStateReplaced stays the same name here.
- */
 public class MultiblockDummyBlock extends Block {
 
     public MultiblockDummyBlock(Properties properties) {

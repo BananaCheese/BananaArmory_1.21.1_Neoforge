@@ -2,6 +2,6 @@
   "parent": "minecraft:block/cube_all",
   "textures": {
     "all": "barmory:block/gear_forge_unformed",
-    "particle": "barmoy:block/gear_forge_unformed"
+    "particle": "barmory:block/gear_forge_unformed"
   }
 }

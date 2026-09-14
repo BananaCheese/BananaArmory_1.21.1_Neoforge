@@ -8,12 +8,6 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
-/**
- * Ported from the Gear Forge entry in DABlockEntities. NeoForge doesn't have
- * a Fabric-style FabricBlockEntityTypeBuilder — the standard replacement is
- * plain vanilla BlockEntityType.Builder.of(factory, validBlocks...).build(null),
- * registered through a normal DeferredRegister<BlockEntityType<?>>.
- */
 public final class BABlockEntities {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES =
             DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, BananasArmory.MODID);

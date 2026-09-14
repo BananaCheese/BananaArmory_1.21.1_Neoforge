@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "barmory:block/multiblock_dummy" }
+  }
+}

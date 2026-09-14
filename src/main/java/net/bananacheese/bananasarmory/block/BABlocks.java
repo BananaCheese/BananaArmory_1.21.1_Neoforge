@@ -24,12 +24,8 @@ public class BABlocks {
     public static final DeferredBlock<Block> GEAR_FORGE_BLOCK = registerBlock("gear_forge",
             () -> new  GearForgeBlock(BlockBehaviour.Properties.of().strength(4.0f).requiresCorrectToolForDrops().sound(SoundType.ANVIL)));
 
-    public static final DeferredBlock<Block> MULTIBLOCK_DUMMY = registerBlock("multiblock_dummy",
+    public static final DeferredBlock<Block> MULTIBLOCK_DUMMY = BLOCKS.register("multiblock_dummy",
             () -> new  MultiblockDummyBlock(BlockBehaviour.Properties.of().strength(-1.0f, 3600000.0f).noLootTable().isValidSpawn((state, level, pos, type) -> false)));
-
-    // GEAR_FORGE gets a BlockItem; MULTIBLOCK_DUMMY does not (matches the
-    // original registerBlockWithoutBlockItem call).
-    //public static final DeferredHolder<Item, BlockItem> GEAR_FORGE_ITEM = BLOCK_ITEMS.registerSimpleBlockItem(GEAR_FORGE_BLOCK);
 
     private static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block) {
         DeferredBlock<T> toReturn = BLOCKS.register(name, block);

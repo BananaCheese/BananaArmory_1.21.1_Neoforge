@@ -15,29 +15,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Ported from DynamicTextureManager. Renames: MinecraftClient -> Minecraft,
- * NativeImageBackedTexture -> DynamicTexture, Identifier -> ResourceLocation,
- * client.getResourceManager().getResource(id).orElseThrow().getInputStream()
- * -> resourceManager.getResourceOrThrow(id).open(),
- * client.getTextureManager().registerTexture(id, tex) -> textureManager.register(id, tex).
- *
- * The NativeImage / texture-compositing logic itself is unchanged — that
- * API (com.mojang.blaze3d.platform.NativeImage) has been stable across many
- * versions including 1.21.1.
- *
- * Two spots flagged inline below are the ones most likely to need a small
- * fix once you can compile against real 1.21.1 sources: the DynamicTexture
- * constructor signature, and DynamicTexture's pixel-access method name.
- */
 @OnlyIn(Dist.CLIENT)
 public class DynamicTextureManager {
     private static final Map<String, ResourceLocation> TEXTURE_CACHE = new HashMap<>();
     private static final Map<String, DynamicTexture> TEXTURE_OBJECTS = new HashMap<>();
 
-    /**
-     * Gets or generates a composite texture for an armor frame.
-     */
     public static ResourceLocation getOrCreateArmorTexture(ItemStack stack) {
         if (!(stack.getItem() instanceof ArmorFrameItem frameItem)) {
             return getFallbackTexture(stack);
@@ -106,14 +88,8 @@ public class DynamicTextureManager {
             int width = baseImage.getWidth();
             int height = baseImage.getHeight();
 
-            // NOTE: verify this constructor against 1.21.1 sources — the
-            // (name, width, height, useMipmaps) shape matches the original,
-            // but DynamicTexture's constructor overloads have shifted
-            // between versions (some take a NativeImage directly instead).
             DynamicTexture texture = new DynamicTexture(width, height, false);
 
-            // NOTE: pixel-access method name — original called getImage(),
-            // mojmap 1.21.1 may call this getPixels() instead. Verify.
             NativeImage textureImage = texture.getPixels();
             if (textureImage != null) {
                 for (int x = 0; x < width; x++) {
@@ -203,9 +179,6 @@ public class DynamicTextureManager {
         return ResourceLocation.withDefaultNamespace("item/barrier");
     }
 
-    /**
-     * Clears the texture cache (call when reloading resources).
-     */
     public static void clearCache() {
         for (DynamicTexture texture : TEXTURE_OBJECTS.values()) {
             texture.close();

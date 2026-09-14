@@ -9,20 +9,6 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 
-/**
- * Ported from GearForgeScreen. Renames: HandledScreen -> AbstractContainerScreen,
- * PlayerInventory -> Inventory, DrawContext -> GuiGraphics,
- * drawTexture -> blit, Identifier -> ResourceLocation,
- * drawBackground -> renderBg, drawMouseoverTooltip -> renderTooltip,
- * drawText -> drawString, Text -> Component.
- *
- * NOTE: the exact `blit` overload signature (which takes a RenderPipeline
- * argument, per the original's `RenderPipelines.GUI_TEXTURED`) has moved
- * around across 1.21.x point releases — verify the parameter order against
- * 1.21.1's GuiGraphics once you can compile locally. The simpler classic
- * overload `blit(ResourceLocation, x, y, u, v, width, height, textureWidth, textureHeight)`
- * is used below since it's the most stable one across versions.
- */
 @OnlyIn(Dist.CLIENT)
 public class GearForgeScreen extends AbstractContainerScreen<GearForgeMenu> {
     private static final ResourceLocation TEXTURE =

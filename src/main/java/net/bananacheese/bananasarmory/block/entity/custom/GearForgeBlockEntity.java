@@ -27,25 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Ported from GearForgeBlockEntity.
- *
- * Renames: Inventory -> Container, Inventories -> ContainerHelper,
- * DefaultedList -> NonNullList, PlayerEntity -> Player,
- * markDirty -> setChanged, canPlayerUse -> stillValid,
- * getStack/setStack/removeStack -> getItem/setItem/removeItem(NoUpdate),
- * getMaxCountPerStack -> getMaxStackSize, Identifier -> ResourceLocation,
- * BlockEntityUpdateS2CPacket -> ClientboundBlockEntityDataPacket,
- * toInitialChunkDataNbt -> getUpdateTag.
- *
- * IMPORTANT VERSION NOTE: the original (1.21.8) uses the newer ReadView/
- * WriteView serialization API. 1.21.1 predates that — this port uses the
- * older loadAdditional(CompoundTag, HolderLookup.Provider) /
- * saveAdditional(CompoundTag, HolderLookup.Provider) pair instead, storing
- * the same logical data (formed flag, sparse inventory snapshot, original
- * block map) directly as NBT tags/lists rather than indexed keys, since
- * CompoundTag makes list storage easier than the ReadView helper did.
- */
 public class GearForgeBlockEntity extends BlockEntity implements Container {
     private boolean isFormed = false;
     private final Map<BlockPos, BlockState> originalBlocks = new HashMap<>();
@@ -172,6 +153,20 @@ public class GearForgeBlockEntity extends BlockEntity implements Container {
                 controllerPos.offset(-1, 1, -1)
         };
 
+        // These aren't part of the required pattern (any block, or air, is
+        // fine here) but they ARE inside the big formed model's visual
+        // footprint. Without converting them to MULTIBLOCK_DUMMY too, they
+        // just keep whatever was there before — usually air — so the
+        // structure looks solid but isn't: players can walk straight
+        // through these spots even though the model visually covers them.
+        BlockPos[] topFillerCells = {
+                controllerPos.offset(0, 1, 0),  // top-center, directly above controller
+                controllerPos.offset(-1, 1, 0),
+                controllerPos.offset(1, 1, 0),
+                controllerPos.offset(0, 1, -1),
+                controllerPos.offset(0, 1, 1)
+        };
+
         Block[] requiredTopBlocks = {
                 Blocks.ANVIL,
                 Blocks.GRINDSTONE,
@@ -216,6 +211,16 @@ public class GearForgeBlockEntity extends BlockEntity implements Container {
                     structureValid = false;
                     break;
                 }
+            }
+        }
+
+        if (structureValid) {
+            // Capture the filler cells too so they get swapped to real,
+            // solid MULTIBLOCK_DUMMY blocks — no type requirement, whatever
+            // is there (including air) gets absorbed and restored on unform.
+            for (BlockPos fillerPos : topFillerCells) {
+                BlockState state = level.getBlockState(fillerPos);
+                tempOriginalBlocks.put(fillerPos.immutable(), state);
             }
         }
 

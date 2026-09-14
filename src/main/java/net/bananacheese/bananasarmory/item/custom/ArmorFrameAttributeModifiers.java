@@ -15,18 +15,6 @@ import net.minecraft.world.item.component.ItemAttributeModifiers;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Ported from ArmorFrameAttributeModifiers. This one only touches the stable
- * item-components API (unaffected by the EquippableComponent gap flagged in
- * ArmorFrameItem), so it should be a reliable, mechanical rename:
- *
- *   AttributeModifierSlot        -> EquipmentSlotGroup
- *   EntityAttributeModifier       -> AttributeModifier
- *   EntityAttributes               -> Attributes
- *   AttributeModifiersComponent      -> ItemAttributeModifiers (+ nested .Entry)
- *   DataComponentTypes                -> DataComponents
- *   Identifier                          -> ResourceLocation
- */
 public class ArmorFrameAttributeModifiers {
 
     public static void updateAttributes(ItemStack stack) {
@@ -64,10 +52,6 @@ public class ArmorFrameAttributeModifiers {
 
         stack.set(DataComponents.ATTRIBUTE_MODIFIERS, new ItemAttributeModifiers(modifiers, true));
 
-        // Client-only model-variant selection. Two rounds of real compiler
-        // feedback have now pinned this down: CustomModelData here is a
-        // simple `record CustomModelData(int value)` wrapper, not the
-        // multi-field record I guessed at earlier. Plain int, wrapped:
         stack.set(DataComponents.CUSTOM_MODEL_DATA,
                 new CustomModelData(ArmorComponentsProperty.calculatePredicateValue(stack)));
     }

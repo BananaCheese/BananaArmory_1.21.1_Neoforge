@@ -20,42 +20,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * ============================================================================
- * HIGHEST-RISK FILE IN THIS SLICE — please read before relying on this.
- * ============================================================================
- *
- * The original (1.21.8) makes ArmorFrameItem wearable via
- * `DataComponentTypes.EQUIPPABLE` / `EquippableComponent`, which lets ANY
- * plain Item right-click-equip into an armor slot without extending
- * ArmorItem. As best I can determine, that data component was introduced in
- * a later 1.21.x release (around the "Bundles of Bravery" drop) — it does
- * NOT exist on 1.21.1. I can't verify this against real 1.21.1 sources from
- * this sandbox (no Mojang/NeoForge maven access), so please double check
- * once you can run `./gradlew genEclipseRuns` (or open the NeoForge sources
- * jar) locally: search for `EquippableComponent` / `DataComponents.EQUIPPABLE`
- * in 1.21.1. If it exists, this file should go back to the original's
- * approach (near copy-paste with renames). If it doesn't (my expectation),
- * this port below — extending vanilla `ArmorItem` for the equip
- * slot/behavior — is the correct fallback.
- *
- * Everything UNRELATED to equipping (the NBT-based component storage, the
- * dynamic attribute-modifier recompute) is stable, stack-level Data
- * Components API that has existed since 1.20.5, so that part of this file
- * (and ArmorFrameAttributeModifiers) should be reliable as-is.
- *
- * Also double check the exact shape of `ArmorMaterial` for 1.21.1 — it's
- * registry/record-based in modern versions and I'm going from memory on its
- * constructor shape. `net.minecraft.world.item.ArmorMaterials` (vanilla's
- * own instances) is a good reference once you have decompiled sources.
- * ============================================================================
- *
- * Renames used below vs. the original: EquipmentSlot stays the same name,
- * AttributeModifierSlot -> EquipmentSlotGroup, EntityAttributeModifier ->
- * AttributeModifier, EntityAttributes -> Attributes,
- * AttributeModifiersComponent -> ItemAttributeModifiers (+ nested .Entry),
- * NbtComponent -> CustomData, Identifier -> ResourceLocation.
- */
 public class ArmorFrameItem extends ArmorItem {
     private final ArmorFrameType frameType;
     private static final int BASE_DEFENSE = 2;
@@ -63,12 +27,7 @@ public class ArmorFrameItem extends ArmorItem {
     private static final double BASE_TOUGHNESS = 0.0;
 
     public ArmorFrameItem(Properties properties, ArmorFrameType frameType, Holder<ArmorMaterial> baseMaterial) {
-        // ArmorItem gives us the vanilla "right click to equip" behavior and
-        // slot restriction for free. Its own default attribute modifiers get
-        // fully overwritten by updateAttributes(...) below the moment a
-        // component is added/removed, so `baseMaterial` mostly just needs to
-        // exist and match the frame's equipment Type — its numeric defense
-        // values don't really matter since we override them immediately.
+
         super(baseMaterial, mapType(frameType), properties.durability(BASE_DURABILITY));
         this.frameType = frameType;
     }
