@@ -25,7 +25,7 @@ public class BABlocks {
             () -> new  GearForgeBlock(BlockBehaviour.Properties.of().strength(4.0f).requiresCorrectToolForDrops().sound(SoundType.ANVIL)));
 
     public static final DeferredBlock<Block> MULTIBLOCK_DUMMY = BLOCKS.register("multiblock_dummy",
-            () -> new  MultiblockDummyBlock(BlockBehaviour.Properties.of().strength(-1.0f, 3600000.0f).noLootTable().noOcclusion().isValidSpawn((state, level, pos, type) -> false)));
+            () -> new  MultiblockDummyBlock(BlockBehaviour.Properties.of().strength(-1.0f, 3600000.0f).noLootTable().noOcclusion()));
 
     private static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block) {
         DeferredBlock<T> toReturn = BLOCKS.register(name, block);
