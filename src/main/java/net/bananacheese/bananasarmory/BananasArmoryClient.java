@@ -1,6 +1,6 @@
 package net.bananacheese.bananasarmory;
 
-import net.bananacheese.bananasarmory.client.model.BAArmorModel;
+import net.bananacheese.bananasarmory.client.model.BAArmorModels;
 import net.bananacheese.bananasarmory.client.model.BAModelLayers;
 import net.bananacheese.bananasarmory.client.renderer.BAArmorClientExtensions;
 import net.bananacheese.bananasarmory.client.renderer.BAArmorLayer;
@@ -41,7 +41,13 @@ public class BananasArmoryClient {
     }
 
     private static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
-        event.registerLayerDefinition(BAModelLayers.ARMOR, BAArmorModel::createBodyLayer);
+        event.registerLayerDefinition(BAModelLayers.HELMET_FRAME, BAArmorModels::createHelmetLayer);
+        event.registerLayerDefinition(BAModelLayers.CHESTPLATE_FRAME, BAArmorModels::createChestplateLayer);
+        event.registerLayerDefinition(BAModelLayers.LEGGINGS_FRAME, BAArmorModels::createLeggingsLayer);
+        event.registerLayerDefinition(BAModelLayers.BOOTS_FRAME, BAArmorModels::createBootsLayer);
+        event.registerLayerDefinition(BAModelLayers.GORGET, BAArmorModels::createGorgetLayer);
+        event.registerLayerDefinition(BAModelLayers.FAULD, BAArmorModels::createFauldLayer);
+        event.registerLayerDefinition(BAModelLayers.PAULDRONS, BAArmorModels::createPauldronsLayer);
     }
 
     private static void addLayers(EntityRenderersEvent.AddLayers event) {

@@ -20,8 +20,7 @@ public class BAArmorClientExtensions implements IClientItemExtensions {
             return original;
         }
 
-        int layer = (slot == EquipmentSlot.LEGS) ? 2 : 1;
-        ResourceLocation composited = DynamicTextureManager.getOrCreateWornArmorTexture(stack, layer);
+        ResourceLocation composited = DynamicTextureManager.getOrCreateWornArmorTexture(stack);
 
         return composited != null ? composited : original;
     }
