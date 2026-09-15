@@ -15,13 +15,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Generates the composited INVENTORY ICON for armor frames (base frame +
+ * each attached component's overlay, flattened into one runtime texture).
+ *
+ * NOTE: this used to also generate the texture WORN on the player model —
+ * that responsibility has moved entirely to GeckoLib now (see
+ * item/custom/ArmorFrameItem + client/renderer/BAArmorRenderer), since
+ * GeckoLib loads worn armor textures directly from resources rather than
+ * needing runtime compositing. This class is icon-only now.
+ */
 @OnlyIn(Dist.CLIENT)
 public class DynamicTextureManager {
     private static final Map<String, ResourceLocation> TEXTURE_CACHE = new HashMap<>();
     private static final Map<String, DynamicTexture> TEXTURE_OBJECTS = new HashMap<>();
 
     /**
-     * Gets or generates a composite texture for an armor frame.
+     * Gets or generates a composite texture for an armor frame's inventory icon.
      */
     public static ResourceLocation getOrCreateArmorTexture(ItemStack stack) {
         if (!(stack.getItem() instanceof ArmorFrameItem frameItem)) {
@@ -36,41 +46,6 @@ public class DynamicTextureManager {
 
         ResourceLocation compositeId = generateCompositeTexture(stack, frameItem, cacheKey);
         TEXTURE_CACHE.put(cacheKey, compositeId);
-
-        return compositeId;
-    }
-
-    /**
-     * Same idea as getOrCreateArmorTexture, but for the texture actually
-     * WORN on the player model instead of the flat inventory icon.
-     *
-     * Unlike vanilla's fixed "layer_1 shared by helmet/chest/boots,
-     * layer_2 for leggings" split, every piece here gets its own
-     * completely independent texture — there's no shared-atlas constraint
-     * since each piece is rendered as its own separate draw call:
-     *   textures/models/armor/<frametype>_frame.png                (base)
-     *   textures/models/armor/components/<component_name>.png      (overlay, transparent elsewhere)
-     * matching the same naming style as the item icon textures.
-     *
-     * Returns null (not a fallback ResourceLocation) if the base template
-     * is missing, so the caller can fall back to vanilla's default texture
-     * instead of pointing at something broken.
-     */
-    public static ResourceLocation getOrCreateWornArmorTexture(ItemStack stack) {
-        if (!(stack.getItem() instanceof ArmorFrameItem frameItem)) {
-            return null;
-        }
-
-        String cacheKey = "worn_" + buildCacheKey(stack);
-
-        if (TEXTURE_CACHE.containsKey(cacheKey)) {
-            return TEXTURE_CACHE.get(cacheKey);
-        }
-
-        ResourceLocation compositeId = generateWornCompositeTexture(stack, frameItem, cacheKey);
-        if (compositeId != null) {
-            TEXTURE_CACHE.put(cacheKey, compositeId);
-        }
 
         return compositeId;
     }
@@ -126,14 +101,8 @@ public class DynamicTextureManager {
             int width = baseImage.getWidth();
             int height = baseImage.getHeight();
 
-            // NOTE: verify this constructor against 1.21.1 sources — the
-            // (name, width, height, useMipmaps) shape matches the original,
-            // but DynamicTexture's constructor overloads have shifted
-            // between versions (some take a NativeImage directly instead).
-            DynamicTexture texture = new DynamicTexture(width, height, false);
+            DynamicTexture texture = new DynamicTexture(cacheKey, width, height, false);
 
-            // NOTE: pixel-access method name — original called getImage(),
-            // mojmap 1.21.1 may call this getPixels() instead. Verify.
             NativeImage textureImage = texture.getPixels();
             if (textureImage != null) {
                 for (int x = 0; x < width; x++) {
@@ -150,7 +119,7 @@ public class DynamicTextureManager {
 
             baseImage.close();
 
-            BananasArmory.LOGGER.info("Generated dynamic texture: " + compositeId);
+            BananasArmory.LOGGER.info("Generated dynamic icon texture: " + compositeId);
             return compositeId;
 
         } catch (Exception e) {
@@ -165,77 +134,6 @@ public class DynamicTextureManager {
             return NativeImage.read(stream);
         } catch (Exception e) {
             BananasArmory.LOGGER.debug("Could not load texture: " + id);
-            return null;
-        }
-    }
-
-    /**
-     * Same compositing approach as generateCompositeTexture, targeting the
-     * worn-armor texture instead of the flat icon layout. See
-     * getOrCreateWornArmorTexture's doc comment for the naming convention —
-     * one independent file per piece, no vanilla layer_1/layer_2 grouping.
-     */
-    private static ResourceLocation generateWornCompositeTexture(ItemStack stack, ArmorFrameItem frameItem,
-                                                                 String cacheKey) {
-        Minecraft client = Minecraft.getInstance();
-
-        try {
-            String frameName = frameItem.getFrameType().name().toLowerCase();
-            ResourceLocation baseTextureId = ResourceLocation.fromNamespaceAndPath(BananasArmory.MODID,
-                    "textures/models/armor/" + frameName + "_frame.png");
-
-            NativeImage baseImage = loadTexture(baseTextureId);
-            if (baseImage == null) {
-                // No worn template authored yet for this piece — let the
-                // caller fall back to vanilla's default texture rather
-                // than pointing at something broken.
-                BananasArmory.LOGGER.debug("No worn armor template at: " + baseTextureId);
-                return null;
-            }
-
-            List<ArmorFrameItem.ComponentData> components = ArmorFrameItem.getComponents(stack);
-            for (ArmorFrameItem.ComponentData comp : components) {
-                String componentTexturePath = getComponentTexturePath(comp.id());
-                ResourceLocation compTextureId = ResourceLocation.fromNamespaceAndPath(BananasArmory.MODID,
-                        "textures/models/armor/components/" + componentTexturePath + ".png");
-
-                NativeImage compImage = loadTexture(compTextureId);
-                if (compImage != null) {
-                    overlayImage(baseImage, compImage);
-                    compImage.close();
-                }
-                // A missing overlay here is expected for any component that
-                // has its own dedicated GEOMETRY instead (see BAArmorLayer)
-                // — those shouldn't have a flat overlay file at all.
-            }
-
-            ResourceLocation compositeId = ResourceLocation.fromNamespaceAndPath(BananasArmory.MODID,
-                    "dynamic/armor_frames_worn/" + cacheKey);
-
-            int width = baseImage.getWidth();
-            int height = baseImage.getHeight();
-
-            DynamicTexture texture = new DynamicTexture(width, height, false);
-            NativeImage textureImage = texture.getPixels();
-            if (textureImage != null) {
-                for (int x = 0; x < width; x++) {
-                    for (int y = 0; y < height; y++) {
-                        textureImage.setPixelRGBA(x, y, baseImage.getPixelRGBA(x, y));
-                    }
-                }
-            }
-
-            texture.upload();
-
-            client.getTextureManager().register(compositeId, texture);
-            TEXTURE_OBJECTS.put(cacheKey, texture);
-
-            baseImage.close();
-
-            return compositeId;
-
-        } catch (Exception e) {
-            BananasArmory.LOGGER.error("Failed to generate worn composite texture for " + cacheKey, e);
             return null;
         }
     }
@@ -306,4 +204,3 @@ public class DynamicTextureManager {
         BananasArmory.LOGGER.info("Cleared dynamic texture cache");
     }
 }
-

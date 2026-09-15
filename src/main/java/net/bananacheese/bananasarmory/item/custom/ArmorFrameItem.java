@@ -1,5 +1,6 @@
 package net.bananacheese.bananasarmory.item.custom;
 
+import net.bananacheese.bananasarmory.client.renderer.BAArmorRenderer;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
@@ -14,20 +15,33 @@ import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
+import software.bernie.geckolib.animatable.GeoItem;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
-public class ArmorFrameItem extends ArmorItem {
+public class ArmorFrameItem extends ArmorItem implements GeoItem {
     private final ArmorFrameType frameType;
     private static final int BASE_DEFENSE = 2;
     private static final int BASE_DURABILITY = 100;
     private static final double BASE_TOUGHNESS = 0.0;
 
-    public ArmorFrameItem(Properties properties, ArmorFrameType frameType, Holder<ArmorMaterial> baseMaterial) {
+    private final AnimatableInstanceCache animatableCache = GeckoLibUtil.createInstanceCache(this);
+    private final Supplier<Object> renderProvider = GeoItem.makeRenderer(this);
 
+    public ArmorFrameItem(Properties properties, ArmorFrameType frameType, Holder<ArmorMaterial> baseMaterial) {
+        // ArmorItem still gives us the equip-slot behavior (right click to
+        // wear, slot restriction). Its own default attribute modifiers get
+        // fully overwritten by updateAttributes(...) below the moment a
+        // component is added/removed, so `baseMaterial` mostly just needs
+        // to exist and match the frame's equipment Type.
         super(baseMaterial, mapType(frameType), properties.durability(BASE_DURABILITY));
         this.frameType = frameType;
     }
@@ -41,12 +55,38 @@ public class ArmorFrameItem extends ArmorItem {
         };
     }
 
+    // --- GeoItem / GeoAnimatable ---
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return this.animatableCache;
+    }
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        // No animations needed yet — geometry-only (static pose, following
+        // the wearer's own body pose). Add a controller here later if you
+        // want e.g. an idle shimmer or activation animation.
+    }
+
+    @Override
+    public Supplier<Object> getRenderProvider() {
+        return this.renderProvider;
+    }
+
+    @Override
+    public void createRenderer(Consumer<Object> consumer) {
+        consumer.accept(new BAArmorRenderer.Provider(this.frameType));
+    }
+
+    // --- Frame-specific logic (unchanged from before) ---
+
     public ArmorFrameType getFrameType() {
         return frameType;
     }
 
     public static boolean addComponent(ItemStack frameStack, String componentId, String componentGroup,
-                                        int defenseBonus, int durabilityBonus, double toughnessBonus) {
+                                       int defenseBonus, int durabilityBonus, double toughnessBonus) {
         CompoundTag nbt = frameStack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
 
         if (!nbt.contains("Components")) {
