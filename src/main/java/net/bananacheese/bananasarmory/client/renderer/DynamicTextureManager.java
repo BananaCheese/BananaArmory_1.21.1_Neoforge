@@ -101,7 +101,7 @@ public class DynamicTextureManager {
             int width = baseImage.getWidth();
             int height = baseImage.getHeight();
 
-            DynamicTexture texture = new DynamicTexture(cacheKey, width, height, false);
+            DynamicTexture texture = new DynamicTexture(width, height, false);
 
             NativeImage textureImage = texture.getPixels();
             if (textureImage != null) {
