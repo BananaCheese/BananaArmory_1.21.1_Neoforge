@@ -37,6 +37,25 @@ public class DynamicTextureManager {
         return compositeId;
     }
 
+    public static ResourceLocation getOrCreateWornArmorTexture(ItemStack stack, int layer) {
+        if (!(stack.getItem() instanceof ArmorFrameItem frameItem)) {
+            return null;
+        }
+
+        String cacheKey = "worn_" + layer + "_" + buildCacheKey(stack);
+
+        if (TEXTURE_CACHE.containsKey(cacheKey)) {
+            return TEXTURE_CACHE.get(cacheKey);
+        }
+
+        ResourceLocation compositeId = generateWornCompositeTexture(stack, frameItem, layer, cacheKey);
+        if (compositeId != null) {
+            TEXTURE_CACHE.put(cacheKey, compositeId);
+        }
+
+        return compositeId;
+    }
+
     private static String buildCacheKey(ItemStack stack) {
         ArmorFrameItem frameItem = (ArmorFrameItem) stack.getItem();
         StringBuilder key = new StringBuilder(frameItem.getFrameType().name().toLowerCase());
@@ -121,6 +140,65 @@ public class DynamicTextureManager {
             return NativeImage.read(stream);
         } catch (Exception e) {
             BananasArmory.LOGGER.debug("Could not load texture: " + id);
+            return null;
+        }
+    }
+
+    private static ResourceLocation generateWornCompositeTexture(ItemStack stack, ArmorFrameItem frameItem,
+                                                                 int layer, String cacheKey) {
+        Minecraft client = Minecraft.getInstance();
+
+        try {
+            String frameName = frameItem.getFrameType().name().toLowerCase();
+            ResourceLocation baseTextureId = ResourceLocation.fromNamespaceAndPath(BananasArmory.MODID,
+                    "textures/models/armor/" + frameName + "_frame_layer_" + layer + ".png");
+
+            NativeImage baseImage = loadTexture(baseTextureId);
+            if (baseImage == null) {
+                BananasArmory.LOGGER.debug("No worn armor template at: " + baseTextureId);
+                return null;
+            }
+
+            List<ArmorFrameItem.ComponentData> components = ArmorFrameItem.getComponents(stack);
+            for (ArmorFrameItem.ComponentData comp : components) {
+                String componentTexturePath = getComponentTexturePath(comp.id());
+                ResourceLocation compTextureId = ResourceLocation.fromNamespaceAndPath(BananasArmory.MODID,
+                        "textures/models/armor/components/" + componentTexturePath + "_layer_" + layer + ".png");
+
+                NativeImage compImage = loadTexture(compTextureId);
+                if (compImage != null) {
+                    overlayImage(baseImage, compImage);
+                    compImage.close();
+                }
+            }
+
+            ResourceLocation compositeId = ResourceLocation.fromNamespaceAndPath(BananasArmory.MODID,
+                    "dynamic/armor_frames_worn/layer" + layer + "_" + cacheKey);
+
+            int width = baseImage.getWidth();
+            int height = baseImage.getHeight();
+
+            DynamicTexture texture = new DynamicTexture(width, height, false);
+            NativeImage textureImage = texture.getPixels();
+            if (textureImage != null) {
+                for (int x = 0; x < width; x++) {
+                    for (int y = 0; y < height; y++) {
+                        textureImage.setPixelRGBA(x, y, baseImage.getPixelRGBA(x, y));
+                    }
+                }
+            }
+
+            texture.upload();
+
+            client.getTextureManager().register(compositeId, texture);
+            TEXTURE_OBJECTS.put(cacheKey, texture);
+
+            baseImage.close();
+
+            return compositeId;
+
+        } catch (Exception e) {
+            BananasArmory.LOGGER.error("Failed to generate worn composite texture for " + cacheKey, e);
             return null;
         }
     }
