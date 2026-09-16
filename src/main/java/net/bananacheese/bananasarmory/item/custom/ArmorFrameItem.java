@@ -1,12 +1,14 @@
 package net.bananacheese.bananasarmory.item.custom;
 
 import net.bananacheese.bananasarmory.client.renderer.BAArmorRenderer;
+import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -16,10 +18,13 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import software.bernie.geckolib.animatable.GeoItem;
+import software.bernie.geckolib.animatable.client.GeoRenderProvider;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.renderer.GeoArmorRenderer;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -27,14 +32,14 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class ArmorFrameItem extends ArmorItem implements GeoItem {
+public class ArmorFrameItem extends ArmorItem implements GeoItem, GeoRenderProvider {
     private final ArmorFrameType frameType;
     private static final int BASE_DEFENSE = 2;
     private static final int BASE_DURABILITY = 100;
     private static final double BASE_TOUGHNESS = 0.0;
 
     private final AnimatableInstanceCache animatableCache = GeckoLibUtil.createInstanceCache(this);
-    private final Supplier<Object> renderProvider = GeoItem.makeRenderer(this);
+    private BAArmorRenderer renderer;
 
     public ArmorFrameItem(Properties properties, ArmorFrameType frameType, Holder<ArmorMaterial> baseMaterial) {
         // ArmorItem still gives us the equip-slot behavior (right click to
@@ -44,6 +49,7 @@ public class ArmorFrameItem extends ArmorItem implements GeoItem {
         // to exist and match the frame's equipment Type.
         super(baseMaterial, mapType(frameType), properties.durability(BASE_DURABILITY));
         this.frameType = frameType;
+        GeoItem.registerSyncedAnimatable(this);
     }
 
     private static Type mapType(ArmorFrameType frameType) {
@@ -69,14 +75,21 @@ public class ArmorFrameItem extends ArmorItem implements GeoItem {
         // want e.g. an idle shimmer or activation animation.
     }
 
-    @Override
-    public Supplier<Object> getRenderProvider() {
-        return this.renderProvider;
-    }
+    // --- GeoRenderProvider ---
 
     @Override
-    public void createRenderer(Consumer<Object> consumer) {
-        consumer.accept(new BAArmorRenderer.Provider(this.frameType));
+    public void createGeoRenderer(Consumer<GeoRenderProvider> consumer) {
+        consumer.accept(new GeoRenderProvider() {
+            private GeoArmorRenderer<?> renderer;
+
+            @Override
+            public <T extends LivingEntity> HumanoidModel<?> getGeoArmorRenderer(@Nullable T livingEntity, ItemStack itemStack, @Nullable EquipmentSlot equipmentSlot, @Nullable HumanoidModel<T> original) {
+                if(this.renderer == null) // Important that we do this. If we just instantiate  it directly in the field it can cause incompatibilities with some mods.
+                    this.renderer = new BAArmorRenderer(frameType);
+
+                return this.renderer;
+            }
+        });
     }
 
     // --- Frame-specific logic (unchanged from before) ---
