@@ -16,8 +16,13 @@
 					"pivot": [-5, 22, 0]
 				},
 				{
-					"name": "pauldronRight",
+					"name": "armorRightArm",
 					"parent": "bipedRightArm",
+					"pivot": [-5, 22, 0]
+				},
+				{
+					"name": "pauldronRight",
+					"parent": "armorRightArm",
 					"pivot": [-5, 22, 0],
 					"cubes": [
 						{
@@ -97,8 +102,13 @@
 					"pivot": [5, 22, 0]
 				},
 				{
-					"name": "pauldronLeft",
+					"name": "armorLeftArm",
 					"parent": "bipedLeftArm",
+					"pivot": [5, 22, 0]
+				},
+				{
+					"name": "pauldronLeft",
+					"parent": "armorLeftArm",
 					"pivot": [5, 22, 0],
 					"cubes": [
 						{
