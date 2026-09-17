@@ -61,8 +61,20 @@ public class BAArmorComponentRenderLayer extends GeoRenderLayer<ArmorFrameItem> 
 
                 // Same transform-copy GeoArmorRenderer.applyBaseTransformations
                 // does internally, just targeted at the correct bone object.
-                RenderUtil.matchModelPartRot(anchor.modelPart(), bone);
-                bone.updatePosition(anchor.modelPart().x, -anchor.modelPart().y, anchor.modelPart().z);
+                // The offset formula differs per body part — GeckoLib's own
+                // code uses plain (x, -y, z) for head/body, but arms need an
+                // extra +/-5 on X and "2 - y" instead of plain negation (legs
+                // similarly need +/-2 and "12 - y"). Get this wrong and the
+                // piece renders offset/floating even though rotation is fine.
+                ModelPart part = anchor.modelPart();
+                RenderUtil.matchModelPartRot(part, bone);
+                switch (anchor.type()) {
+                    case HEAD, BODY -> bone.updatePosition(part.x, -part.y, part.z);
+                    case RIGHT_ARM -> bone.updatePosition(part.x + 5, 2 - part.y, part.z);
+                    case LEFT_ARM -> bone.updatePosition(part.x - 5, 2 - part.y, part.z);
+                    case RIGHT_LEG -> bone.updatePosition(part.x + 2, 12 - part.y, part.z);
+                    case LEFT_LEG -> bone.updatePosition(part.x - 2, 12 - part.y, part.z);
+                }
             }
 
             ResourceLocation componentTexture = componentModel.getTextureResource(animatable, armorRenderer);
@@ -83,11 +95,11 @@ public class BAArmorComponentRenderLayer extends GeoRenderLayer<ArmorFrameItem> 
      */
     private List<BoneAnchor> getBoneAnchors(String componentName, HumanoidModel<?> wearerModel) {
         return switch (componentName) {
-            case "iron_gorget" -> List.of(new BoneAnchor("gorget", wearerModel.body));
-            case "iron_fauld" -> List.of(new BoneAnchor("fauld", wearerModel.body));
+            case "iron_gorget" -> List.of(new BoneAnchor("gorget", wearerModel.body, AnchorType.BODY));
+            case "iron_fauld" -> List.of(new BoneAnchor("fauld", wearerModel.body, AnchorType.BODY));
             case "iron_pauldrons" -> List.of(
-                    new BoneAnchor("pauldronLeft", wearerModel.leftArm),
-                    new BoneAnchor("pauldronRight", wearerModel.rightArm)
+                    new BoneAnchor("pauldronLeft", wearerModel.leftArm, AnchorType.LEFT_ARM),
+                    new BoneAnchor("pauldronRight", wearerModel.rightArm, AnchorType.RIGHT_ARM)
             );
             default -> List.of(); // e.g. iron_reinforcement — flat reskin only
         };
@@ -112,7 +124,19 @@ public class BAArmorComponentRenderLayer extends GeoRenderLayer<ArmorFrameItem> 
                         BananasArmory.MODID, "armor/components/geometry/" + name)));
     }
 
-    private record BoneAnchor(String boneName, ModelPart modelPart) {
+    private record BoneAnchor(String boneName, ModelPart modelPart, AnchorType type) {
+    }
+
+    /**
+     * Which vanilla body part this bone follows — determines which
+     * position-offset formula applies (see the switch in render() above).
+     * Values/offsets copied directly from GeoArmorRenderer's own
+     * applyBaseTransformations, which uses a different fixed correction per
+     * body part (head/body use plain negation; arms/legs need extra
+     * +/-5 or +/-2 offsets to align with GeckoLib's armor bone coordinate
+     * space).
+     */
+    private enum AnchorType {
+        HEAD, BODY, RIGHT_ARM, LEFT_ARM, RIGHT_LEG, LEFT_LEG
     }
 }
-
