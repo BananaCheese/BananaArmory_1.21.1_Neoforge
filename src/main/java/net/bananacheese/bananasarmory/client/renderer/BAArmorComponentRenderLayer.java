@@ -3,12 +3,15 @@ package net.bananacheese.bananasarmory.client.renderer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.bananacheese.bananasarmory.BananasArmory;
+import net.bananacheese.bananasarmory.item.custom.ArmorComponentItem;
 import net.bananacheese.bananasarmory.item.custom.ArmorFrameItem;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.cache.object.GeoBone;
@@ -42,7 +45,13 @@ public class BAArmorComponentRenderLayer extends GeoRenderLayer<ArmorFrameItem> 
 
         for (ArmorFrameItem.ComponentData comp : ArmorFrameItem.getComponents(stack)) {
             String name = comp.id().substring(comp.id().lastIndexOf(':') + 1);
-            List<BoneAnchor> anchors = getBoneAnchors(name, wearerModel);
+
+            ArmorComponentItem.ComponentType shape = resolveComponentType(comp.id());
+            if (shape == null) {
+                continue; // couldn't resolve the item, or it's not an ArmorComponentItem
+            }
+
+            List<BoneAnchor> anchors = getBoneAnchors(shape, wearerModel);
             if (anchors.isEmpty()) {
                 continue; // flat reskin only, no dedicated geometry
             }
@@ -87,22 +96,47 @@ public class BAArmorComponentRenderLayer extends GeoRenderLayer<ArmorFrameItem> 
     }
 
     /**
-     * Maps a component's item name to the bone(s) it needs posed, each
-     * paired with the vanilla ModelPart it should follow. Bone names here
-     * are whatever you actually named them in that component's Blockbench
-     * project — these are just the strings this code searches for, adjust
-     * to match exactly.
+     * Maps a component SHAPE (not material — gold_pauldrons and
+     * iron_pauldrons both resolve to ComponentType.PAULDRONS) to the
+     * bone(s) it needs posed. This is what makes adding a new material
+     * tier of an EXISTING shape (gold/diamond pauldrons, etc.) need zero
+     * changes here — only genuinely new shapes need a new case.
+     *
+     * Bone names here are whatever you actually named them in that
+     * component's Blockbench project — these are just the strings this
+     * code searches for, adjust to match exactly. If different materials
+     * of the same shape use differently-named bones (they shouldn't, but
+     * just in case), this would need revisiting.
      */
-    private List<BoneAnchor> getBoneAnchors(String componentName, HumanoidModel<?> wearerModel) {
-        return switch (componentName) {
-            case "iron_gorget" -> List.of(new BoneAnchor("gorget", wearerModel.body, AnchorType.BODY));
-            case "iron_fauld" -> List.of(new BoneAnchor("fauld", wearerModel.body, AnchorType.BODY));
-            case "iron_pauldrons" -> List.of(
+    private List<BoneAnchor> getBoneAnchors(ArmorComponentItem.ComponentType shape, HumanoidModel<?> wearerModel) {
+        return switch (shape) {
+            case GORGET -> List.of(new BoneAnchor("gorget", wearerModel.body, AnchorType.BODY));
+            case FAULD -> List.of(new BoneAnchor("fauld", wearerModel.body, AnchorType.BODY));
+            case PAULDRONS -> List.of(
                     new BoneAnchor("pauldronLeft", wearerModel.leftArm, AnchorType.LEFT_ARM),
                     new BoneAnchor("pauldronRight", wearerModel.rightArm, AnchorType.RIGHT_ARM)
             );
-            default -> List.of(); // e.g. iron_reinforcement — flat reskin only
+            default -> List.of(); // e.g. REINFORCEMENT, VISOR, PLUME, etc — flat reskin only until they get geometry too
         };
+    }
+
+    /**
+     * Resolves the actual registered Item for a component id and returns
+     * its ComponentType, or null if the item can't be found or isn't an
+     * ArmorComponentItem.
+     */
+    private ArmorComponentItem.ComponentType resolveComponentType(String componentId) {
+        ResourceLocation id = ResourceLocation.tryParse(componentId);
+        if (id == null) {
+            return null;
+        }
+
+        Item item = BuiltInRegistries.ITEM.get(id);
+        if (item instanceof ArmorComponentItem armorComponentItem) {
+            return armorComponentItem.getComponentType();
+        }
+
+        return null;
     }
 
     private GeoBone findBone(List<GeoBone> bones, String name) {

@@ -25,6 +25,8 @@ public class BAItemModelProvider extends ItemModelProvider {
         registerArmorComponent(BAItems.IRON_GORGET.get(), "iron_gorget");
         registerArmorComponent(BAItems.IRON_FAULD.get(), "iron_fauld");
         registerArmorComponent(BAItems.IRON_REINFORCEMENT.get(), "iron_reinforcement");
+
+        registerArmorComponent(BAItems.DIAMOND_PAULDRONS.get(), "diamond_pauldrons");
     }
 
     private void registerArmorComponent(Item item, String name) {

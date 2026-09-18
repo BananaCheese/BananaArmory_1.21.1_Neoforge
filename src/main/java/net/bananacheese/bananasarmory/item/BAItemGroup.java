@@ -31,6 +31,8 @@ public class BAItemGroup {
                 pOutput.accept(BAItems.IRON_FAULD);
                 pOutput.accept(BAItems.IRON_GORGET);
                 pOutput.accept(BAItems.IRON_REINFORCEMENT);
+
+                pOutput.accept(BAItems.DIAMOND_PAULDRONS);
             }).build());
 
     public static void register(IEventBus eventBus) {

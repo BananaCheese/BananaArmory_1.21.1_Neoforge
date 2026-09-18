@@ -40,6 +40,10 @@ public final class BAItems {
             "iron_reinforcement", props -> new ArmorComponentItem(props.stacksTo(16),
                     ArmorComponentItem.ComponentType.REINFORCEMENT, "reinforcement", 1, 100, 1.0));
 
+    public static final DeferredItem<ArmorComponentItem> DIAMOND_PAULDRONS = ITEMS.registerItem(
+            "diamond_pauldrons", props -> new ArmorComponentItem(props.stacksTo(16),
+                    ArmorComponentItem.ComponentType.PAULDRONS, "pauldrons", 3, 75, 0.7));
+
     private BAItems() {
     }
 }

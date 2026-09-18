@@ -18,6 +18,12 @@
     },
     {
       "predicate": {
+        "custom_model_data": 1604
+      },
+      "model": "barmory:item/chestplate_frame_diamond_pauldrons_iron_gorget"
+    },
+    {
+      "predicate": {
         "custom_model_data": 2176
       },
       "model": "barmory:item/chestplate_frame_iron_fauld_iron_gorget_iron_pauldrons_iron_reinforcement"
@@ -27,6 +33,18 @@
         "custom_model_data": 2286
       },
       "model": "barmory:item/chestplate_frame_iron_fauld_iron_gorget_iron_reinforcement"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 2547
+      },
+      "model": "barmory:item/chestplate_frame_diamond_pauldrons_iron_fauld_iron_reinforcement"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 2617
+      },
+      "model": "barmory:item/chestplate_frame_diamond_pauldrons_iron_fauld"
     },
     {
       "predicate": {
@@ -48,9 +66,27 @@
     },
     {
       "predicate": {
+        "custom_model_data": 5250
+      },
+      "model": "barmory:item/chestplate_frame_diamond_pauldrons_iron_gorget_iron_reinforcement"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 5533
+      },
+      "model": "barmory:item/chestplate_frame_diamond_pauldrons_iron_fauld_iron_gorget"
+    },
+    {
+      "predicate": {
         "custom_model_data": 5927
       },
       "model": "barmory:item/chestplate_frame_iron_fauld_iron_gorget"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 6113
+      },
+      "model": "barmory:item/chestplate_frame_diamond_pauldrons_iron_fauld_iron_gorget_iron_reinforcement"
     },
     {
       "predicate": {
@@ -72,9 +108,21 @@
     },
     {
       "predicate": {
+        "custom_model_data": 8219
+      },
+      "model": "barmory:item/chestplate_frame_diamond_pauldrons_iron_reinforcement"
+    },
+    {
+      "predicate": {
         "custom_model_data": 8251
       },
       "model": "barmory:item/chestplate_frame_iron_fauld"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 8316
+      },
+      "model": "barmory:item/chestplate_frame_diamond_pauldrons"
     },
     {
       "predicate": {
