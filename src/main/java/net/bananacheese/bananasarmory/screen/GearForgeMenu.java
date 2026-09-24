@@ -143,13 +143,19 @@ public class GearForgeMenu extends AbstractContainerMenu {
         ItemStack frameAfterClick = container.getItem(FRAME_SLOT);
         boolean hasFrameAfter = frameAfterClick.getItem() instanceof ArmorFrameItem;
 
-        if (slotIndex == FRAME_SLOT) {
-            updateLayout();
-        }
-
         if (!hadFrameBefore && hasFrameAfter) {
+            // New frame going IN — figure out its layout BEFORE syncing,
+            // since syncFrameWithComponents needs the new layout's slot
+            // count to know how many components to place.
+            updateLayout();
             syncFrameWithComponents();
         } else if (hadFrameBefore && !hasFrameAfter && slotIndex == FRAME_SLOT) {
+            // Frame coming OUT — consume using the layout that's STILL
+            // active (the frame's own layout) before switching to empty.
+            // Doing this in the other order collapses currentLayout to 0
+            // slots first, and the consume loop below silently iterates
+            // zero times — components never get saved into the frame NBT,
+            // and never get cleared from their (now invisible) slots either.
             saveComponentsToFrameAndConsume(frameBeforeClick, player);
 
             for (int i = 0; i < MAX_UPGRADE_SLOTS; i++) {
@@ -160,6 +166,9 @@ public class GearForgeMenu extends AbstractContainerMenu {
             if (cursorStack.getItem() instanceof ArmorFrameItem) {
                 setCarried(frameBeforeClick);
             }
+
+            // NOW switch to the empty layout, after consuming is done.
+            updateLayout();
         } else if (hasFrameAfter && slotIndex >= UPGRADE_SLOTS_START && slotIndex < INVENTORY_START) {
             updateFrameStatsPreview(player);
         }
