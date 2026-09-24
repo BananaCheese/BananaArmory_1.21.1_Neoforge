@@ -103,16 +103,31 @@ public class GearForgeMenu extends AbstractContainerMenu {
 
         this.currentLayout = newLayout;
 
-        for (int i = 0; i < upgradeSlots.size(); i++) {
-            GearForgeSlot slot = upgradeSlots.get(i);
+        // Slot.x/y are final in this version — can't mutate an existing
+        // Slot's position, so each active/inactive change replaces the
+        // Slot object at that same LIST POSITION instead. Vanilla's
+        // click/render handling keys off position within this.slots (a
+        // mutable NonNullList, even though the `slots` reference itself is
+        // final), not any state stored on the Slot object, so this should
+        // stay correctly in sync — but this is the one part of this whole
+        // system I haven't been able to verify against real behavior, so
+        // if slot interaction misbehaves specifically right after a layout
+        // switch, this is the first place to look.
+        for (int i = 0; i < MAX_UPGRADE_SLOTS; i++) {
+            int containerIndex = UPGRADE_SLOTS_START + i;
+            int x = HIDDEN_SLOT_POS;
+            int y = HIDDEN_SLOT_POS;
+
             if (i < newLayout.slots().size()) {
                 GearForgeLayout.SlotDef def = newLayout.slots().get(i);
-                slot.x = def.x();
-                slot.y = def.y();
-            } else {
-                slot.x = HIDDEN_SLOT_POS;
-                slot.y = HIDDEN_SLOT_POS;
+                x = def.x();
+                y = def.y();
             }
+
+            GearForgeSlot newSlot = new GearForgeSlot(container, containerIndex, x, y,
+                    GearForgeSlot.SlotRole.UPGRADE, i, this);
+            this.slots.set(containerIndex, newSlot);
+            upgradeSlots.set(i, newSlot);
         }
     }
 
