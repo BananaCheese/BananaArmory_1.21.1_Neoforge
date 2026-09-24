@@ -21,6 +21,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class GearForgeMenu extends AbstractContainerMenu {
@@ -28,27 +29,36 @@ public class GearForgeMenu extends AbstractContainerMenu {
 
     private static final int FRAME_SLOT = 0;
     private static final int UPGRADE_SLOTS_START = 1;
-    private static final int UPGRADE_SLOTS_COUNT = 6;
-    private static final int INVENTORY_START = UPGRADE_SLOTS_START + UPGRADE_SLOTS_COUNT;
+    public static final int MAX_UPGRADE_SLOTS = 8;
+    private static final int INVENTORY_START = UPGRADE_SLOTS_START + MAX_UPGRADE_SLOTS;
+    private static final int TOTAL_CONTAINER_SLOTS = INVENTORY_START;
+
+    // Off-screen position for inactive upgrade slots — outside the GUI's
+    // rendered bounds, so they're both invisible and unreachable by click.
+    private static final int HIDDEN_SLOT_POS = -1000;
+
+    private final List<GearForgeSlot> upgradeSlots = new ArrayList<>();
+    private GearForgeLayout currentLayout;
 
     public GearForgeMenu(int syncId, Inventory playerInventory) {
-        this(syncId, playerInventory, new SimpleContainer(7));
+        this(syncId, playerInventory, new SimpleContainer(TOTAL_CONTAINER_SLOTS));
     }
 
     public GearForgeMenu(int syncId, Inventory playerInventory, Container container) {
         super(BAScreenHandlers.GEAR_FORGE_MENU.get(), syncId);
 
-        checkContainerSize(container, 7);
+        checkContainerSize(container, TOTAL_CONTAINER_SLOTS);
         this.container = container;
+        this.currentLayout = GearForgeLayout.empty(defaultBackground());
 
-        this.addSlot(new GearForgeSlot(container, FRAME_SLOT, 113, 38, GearForgeSlot.SlotType.FRAME));
+        this.addSlot(new GearForgeSlot(container, FRAME_SLOT, 113, 38, GearForgeSlot.SlotRole.FRAME, -1, this));
 
-        this.addSlot(new GearForgeSlot(container, 1, 101, 17, GearForgeSlot.SlotType.COMPONENT));
-        this.addSlot(new GearForgeSlot(container, 2, 125, 17, GearForgeSlot.SlotType.COMPONENT));
-        this.addSlot(new GearForgeSlot(container, 3, 89, 38, GearForgeSlot.SlotType.COMPONENT));
-        this.addSlot(new GearForgeSlot(container, 4, 137, 38, GearForgeSlot.SlotType.COMPONENT));
-        this.addSlot(new GearForgeSlot(container, 5, 101, 59, GearForgeSlot.SlotType.COMPONENT));
-        this.addSlot(new GearForgeSlot(container, 6, 125, 59, GearForgeSlot.SlotType.COMPONENT));
+        for (int i = 0; i < MAX_UPGRADE_SLOTS; i++) {
+            GearForgeSlot slot = new GearForgeSlot(container, UPGRADE_SLOTS_START + i,
+                    HIDDEN_SLOT_POS, HIDDEN_SLOT_POS, GearForgeSlot.SlotRole.UPGRADE, i, this);
+            upgradeSlots.add(slot);
+            this.addSlot(slot);
+        }
 
         for (int row = 0; row < 3; ++row) {
             for (int col = 0; col < 9; ++col) {
@@ -60,7 +70,53 @@ public class GearForgeMenu extends AbstractContainerMenu {
         for (int col = 0; col < 9; ++col) {
             this.addSlot(new Slot(playerInventory, col, 8 + col * 18, 145));
         }
+
+        updateLayout();
     }
+
+    private static ResourceLocation defaultBackground() {
+        return ResourceLocation.fromNamespaceAndPath("barmory", "textures/gui/gear_forge.png");
+    }
+
+    // --- Layout switching ---
+
+    public GearForgeLayout getCurrentLayout() {
+        return this.currentLayout;
+    }
+
+    public boolean isUpgradeSlotActive(int index) {
+        return index < this.currentLayout.slots().size();
+    }
+
+    public boolean isValidForUpgradeSlot(int index, ItemStack stack) {
+        if (!isUpgradeSlotActive(index)) {
+            return false;
+        }
+        return this.currentLayout.slots().get(index).validItem().test(stack);
+    }
+
+    private void updateLayout() {
+        ItemStack frameStack = container.getItem(FRAME_SLOT);
+        GearForgeLayout newLayout = frameStack.getItem() instanceof GearForgeable forgeable
+                ? forgeable.getForgeLayout()
+                : GearForgeLayout.empty(defaultBackground());
+
+        this.currentLayout = newLayout;
+
+        for (int i = 0; i < upgradeSlots.size(); i++) {
+            GearForgeSlot slot = upgradeSlots.get(i);
+            if (i < newLayout.slots().size()) {
+                GearForgeLayout.SlotDef def = newLayout.slots().get(i);
+                slot.x = def.x();
+                slot.y = def.y();
+            } else {
+                slot.x = HIDDEN_SLOT_POS;
+                slot.y = HIDDEN_SLOT_POS;
+            }
+        }
+    }
+
+    // --- Component application (still armor-specific, see class doc) ---
 
     @Override
     public void clicked(int slotIndex, int button, ClickType clickType, Player player) {
@@ -72,13 +128,17 @@ public class GearForgeMenu extends AbstractContainerMenu {
         ItemStack frameAfterClick = container.getItem(FRAME_SLOT);
         boolean hasFrameAfter = frameAfterClick.getItem() instanceof ArmorFrameItem;
 
+        if (slotIndex == FRAME_SLOT) {
+            updateLayout();
+        }
+
         if (!hadFrameBefore && hasFrameAfter) {
             syncFrameWithComponents();
         } else if (hadFrameBefore && !hasFrameAfter && slotIndex == FRAME_SLOT) {
             saveComponentsToFrameAndConsume(frameBeforeClick, player);
 
-            for (int i = 1; i <= 6; i++) {
-                container.setItem(i, ItemStack.EMPTY);
+            for (int i = 0; i < MAX_UPGRADE_SLOTS; i++) {
+                container.setItem(UPGRADE_SLOTS_START + i, ItemStack.EMPTY);
             }
 
             ItemStack cursorStack = getCarried();
@@ -96,18 +156,18 @@ public class GearForgeMenu extends AbstractContainerMenu {
         if (frameStack.getItem() instanceof ArmorFrameItem) {
             List<ArmorFrameItem.ComponentData> components = ArmorFrameItem.getComponents(frameStack);
 
-            for (int i = 0; i < 6; i++) {
+            for (int i = 0; i < currentLayout.slots().size(); i++) {
                 if (i < components.size()) {
                     ArmorFrameItem.ComponentData data = components.get(i);
                     ResourceLocation itemId = ResourceLocation.tryParse(data.id());
                     if (itemId != null) {
                         Item item = BuiltInRegistries.ITEM.get(itemId);
                         if (item instanceof ArmorComponentItem) {
-                            container.setItem(i + 1, new ItemStack(item, 1));
+                            container.setItem(UPGRADE_SLOTS_START + i, new ItemStack(item, 1));
                         }
                     }
                 } else {
-                    container.setItem(i + 1, ItemStack.EMPTY);
+                    container.setItem(UPGRADE_SLOTS_START + i, ItemStack.EMPTY);
                 }
             }
         }
@@ -124,8 +184,8 @@ public class GearForgeMenu extends AbstractContainerMenu {
         frameStack.set(DataComponents.CUSTOM_DATA, CustomData.of(nbt));
 
         boolean hadDuplicate = false;
-        for (int i = 1; i <= 6; i++) {
-            ItemStack componentStack = container.getItem(i);
+        for (int i = 0; i < currentLayout.slots().size(); i++) {
+            ItemStack componentStack = container.getItem(UPGRADE_SLOTS_START + i);
             if (componentStack.getItem() instanceof ArmorComponentItem component) {
                 String componentId = BuiltInRegistries.ITEM.getKey(componentStack.getItem()).toString();
                 boolean added = ArmorFrameItem.addComponent(
@@ -160,8 +220,9 @@ public class GearForgeMenu extends AbstractContainerMenu {
         nbt.put("Components", new ListTag());
         frameStack.set(DataComponents.CUSTOM_DATA, CustomData.of(nbt));
 
-        for (int i = 1; i <= 6; i++) {
-            ItemStack componentStack = container.getItem(i);
+        for (int i = 0; i < currentLayout.slots().size(); i++) {
+            int slotIndex = UPGRADE_SLOTS_START + i;
+            ItemStack componentStack = container.getItem(slotIndex);
             if (componentStack.getItem() instanceof ArmorComponentItem component) {
                 String componentId = BuiltInRegistries.ITEM.getKey(componentStack.getItem()).toString();
                 boolean added = ArmorFrameItem.addComponent(
@@ -174,10 +235,10 @@ public class GearForgeMenu extends AbstractContainerMenu {
                 );
 
                 if (added) {
-                    container.setItem(i, ItemStack.EMPTY);
+                    container.setItem(slotIndex, ItemStack.EMPTY);
                 } else {
                     ItemStack rejected = componentStack.copy();
-                    container.setItem(i, ItemStack.EMPTY);
+                    container.setItem(slotIndex, ItemStack.EMPTY);
 
                     if (!player.getInventory().add(rejected)) {
                         player.drop(rejected, false);
@@ -210,6 +271,10 @@ public class GearForgeMenu extends AbstractContainerMenu {
                 if (!this.moveItemStackTo(originalStack, INVENTORY_START, this.slots.size(), true)) {
                     return ItemStack.EMPTY;
                 }
+
+                if (invSlot == FRAME_SLOT) {
+                    updateLayout();
+                }
             } else {
                 boolean wasInserted;
 
@@ -222,6 +287,7 @@ public class GearForgeMenu extends AbstractContainerMenu {
                     }
                 } else {
                     wasInserted = true;
+                    updateLayout();
                     syncFrameWithComponents();
                 }
 

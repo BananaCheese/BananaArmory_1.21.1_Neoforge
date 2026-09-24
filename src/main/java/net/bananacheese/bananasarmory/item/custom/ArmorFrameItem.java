@@ -1,11 +1,14 @@
 package net.bananacheese.bananasarmory.item.custom;
 
 import net.bananacheese.bananasarmory.client.renderer.BAArmorRenderer;
+import net.bananacheese.bananasarmory.screen.GearForgeLayout;
+import net.bananacheese.bananasarmory.screen.GearForgeable;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ArmorItem;
@@ -26,7 +29,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-public class ArmorFrameItem extends ArmorItem implements GeoItem, GeoRenderProvider {
+public class ArmorFrameItem extends ArmorItem implements GeoItem, GeoRenderProvider, GearForgeable {
     private final ArmorFrameType frameType;
     private static final int BASE_DEFENSE = 2;
     private static final int BASE_DURABILITY = 100;
@@ -70,20 +73,39 @@ public class ArmorFrameItem extends ArmorItem implements GeoItem, GeoRenderProvi
     }
 
     // --- GeoRenderProvider ---
+    public GeoArmorRenderer<?> getGeoArmorRenderer(ItemStack stack, EquipmentSlot slot, HumanoidModel<?> baseModel) {
+        if (this.renderer == null) {
+            this.renderer = new BAArmorRenderer(this.frameType);
+        }
+        return this.renderer;
+    }
 
+    // --- GearForgeable ---
+
+    /**
+     * Same 6 slots, same positions, same validity rule as before — just
+     * expressed as a GearForgeLayout now instead of being hardcoded
+     * directly in GearForgeMenu/GearForgeSlot. Positions are identical
+     * across all four ArmorFrameTypes; only which components are valid
+     * differs, via ComponentType.isCompatibleWith(this.frameType).
+     */
     @Override
-    public void createGeoRenderer(Consumer<GeoRenderProvider> consumer) {
-        consumer.accept(new GeoRenderProvider() {
-            private GeoArmorRenderer<?> renderer;
+    public GearForgeLayout getForgeLayout() {
+        java.util.function.Predicate<ItemStack> componentValid = stack ->
+                stack.getItem() instanceof ArmorComponentItem component
+                        && component.getComponentType().isCompatibleWith(this.frameType);
 
-            @Override
-            public <T extends LivingEntity> HumanoidModel<?> getGeoArmorRenderer(@Nullable T livingEntity, ItemStack itemStack, @Nullable EquipmentSlot equipmentSlot, @Nullable HumanoidModel<T> original) {
-                if(this.renderer == null) // Important that we do this. If we just instantiate  it directly in the field it can cause incompatibilities with some mods.
-                    this.renderer = new BAArmorRenderer(frameType);
-
-                return this.renderer;
-            }
-        });
+        return new GearForgeLayout(
+                ResourceLocation.fromNamespaceAndPath("barmory", "textures/gui/gear_forge.png"),
+                List.of(
+                        new GearForgeLayout.SlotDef("component_1", 101, 17, componentValid),
+                        new GearForgeLayout.SlotDef("component_2", 125, 17, componentValid),
+                        new GearForgeLayout.SlotDef("component_3", 89, 38, componentValid),
+                        new GearForgeLayout.SlotDef("component_4", 137, 38, componentValid),
+                        new GearForgeLayout.SlotDef("component_5", 101, 59, componentValid),
+                        new GearForgeLayout.SlotDef("component_6", 125, 59, componentValid)
+                )
+        );
     }
 
     // --- Frame-specific logic (unchanged from before) ---

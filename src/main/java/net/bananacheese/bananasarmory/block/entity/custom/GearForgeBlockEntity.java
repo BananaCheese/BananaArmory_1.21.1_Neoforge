@@ -33,7 +33,11 @@ public class GearForgeBlockEntity extends BlockEntity implements Container {
     private int checkCooldown = 0;
     private static final int CHECK_INTERVAL = 40;
 
-    private final NonNullList<ItemStack> inventory = NonNullList.withSize(7, ItemStack.EMPTY);
+    // 1 frame slot + GearForgeMenu.MAX_UPGRADE_SLOTS (8) — kept as a literal
+    // here rather than importing the constant, since block entity classes
+    // shouldn't depend on the (client/menu-focused) screen package. Keep
+    // this in sync with GearForgeMenu.MAX_UPGRADE_SLOTS if that ever changes.
+    private final NonNullList<ItemStack> inventory = NonNullList.withSize(9, ItemStack.EMPTY);
 
     public GearForgeBlockEntity(BlockPos pos, BlockState state) {
         super(BABlockEntities.GEAR_FORGE_BE.get(), pos, state);
