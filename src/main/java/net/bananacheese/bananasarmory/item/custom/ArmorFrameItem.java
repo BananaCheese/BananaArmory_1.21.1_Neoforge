@@ -29,14 +29,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-public class ArmorFrameItem extends ArmorItem implements GeoItem, GeoRenderProvider, GearForgeable {
+public class ArmorFrameItem extends ArmorItem implements GeoItem, GearForgeable {
     private final ArmorFrameType frameType;
     private static final int BASE_DEFENSE = 2;
     private static final int BASE_DURABILITY = 100;
     private static final double BASE_TOUGHNESS = 0.0;
 
     private final AnimatableInstanceCache animatableCache = GeckoLibUtil.createInstanceCache(this);
-    private BAArmorRenderer renderer;
 
     public ArmorFrameItem(Properties properties, ArmorFrameType frameType, Holder<ArmorMaterial> baseMaterial) {
         // ArmorItem still gives us the equip-slot behavior (right click to
@@ -73,11 +72,29 @@ public class ArmorFrameItem extends ArmorItem implements GeoItem, GeoRenderProvi
     }
 
     // --- GeoRenderProvider ---
-    public GeoArmorRenderer<?> getGeoArmorRenderer(ItemStack stack, EquipmentSlot slot, HumanoidModel<?> baseModel) {
-        if (this.renderer == null) {
-            this.renderer = new BAArmorRenderer(this.frameType);
-        }
-        return this.renderer;
+
+    /**
+     * The confirmed-working registration pattern (recovered from git
+     * history — this got accidentally reverted to a broken direct-
+     * `implements GeoRenderProvider` version during an earlier edit, which
+     * is what caused worn rendering to fall back to plain vanilla iron).
+     * GeckoLib expects THIS entrypoint — createGeoRenderer handing a
+     * GeoRenderProvider instance to the consumer — not the item
+     * implementing GeoRenderProvider itself.
+     */
+    public void createGeoRenderer(Consumer<GeoRenderProvider> consumer) {
+        consumer.accept(new GeoRenderProvider() {
+            private GeoArmorRenderer<?> renderer;
+
+            @Override
+            public <T extends LivingEntity> HumanoidModel<?> getGeoArmorRenderer(@Nullable T livingEntity, ItemStack itemStack,
+                                                                                 @Nullable EquipmentSlot equipmentSlot, @Nullable HumanoidModel<T> original) {
+                if (this.renderer == null) // Important that we do this. If we just instantiate it directly in the field it can cause incompatibilities with some mods.
+                    this.renderer = new BAArmorRenderer(frameType);
+
+                return this.renderer;
+            }
+        });
     }
 
     // --- GearForgeable ---
